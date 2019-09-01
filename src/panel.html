@@ -9,37 +9,18 @@
 </head>
 
 <body>
-    <img src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif" width="300" />
-    <h1 id="lines-of-code-counter">0</h1>
-
-    <canvas id="c"></canvas>
-    <img src="my_image.png" id="my-image">
+    <canvas id="c" width="800" height="600" style="background-color: white;"></canvas>
 
     <script>
-        const counter = document.getElementById('lines-of-code-counter');
-
-        let count = 0;
-        setInterval(() => {
-            counter.textContent = count++;
-        }, 100);
-
         var canvas = new fabric.StaticCanvas('c');
-        var circle = new fabric.Circle({
-            radius: 20, fill: 'green', left: 100, top: 100
-        });
-        var triangle = new fabric.Triangle({
-            width: 20, height: 30, fill: 'blue', left: 50, top: 50
-        });
-
-        canvas.add(circle, triangle);
-
         // Handle the message inside the webview
         window.addEventListener('message', event => {
+            canvas.clear()
             const message = event.data; // The JSON data our extension sent
             if(!message.components)return
             for(let i in message.components){
                 const d=message.components[i]
-                console.log(d)
+                if(!d.tag.includes("img")){continue}
                 fabric.Image.fromURL(d.url,function(c){
                     canvas.add(c)
                 },{"left":d.pos.x,"top":d.pos.y})

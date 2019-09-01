@@ -3,12 +3,20 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as jsyaml from 'js-yaml';
 
 const htmlFile = "src/panel.html";
 let currentPanel: vscode.WebviewPanel | undefined = undefined;
+let targetText: vscode.TextDocument | undefined = undefined;
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('extension.helloWorld', () => {
+            const doc = vscode.window.activeTextEditor!.document;
+            if (doc.languageId !== "yaml") {
+                vscode.window.showInformationMessage('ファイルがyamlではありません');
+                return;
+            }
+
             // Create and show a new webview
             const panel = createPanel();
             currentPanel = panel;
@@ -17,34 +25,56 @@ export function activate(context: vscode.ExtensionContext) {
             const reped = replaceVars(c, context);
             // And set its HTML content
             panel.webview.html = reped;
+
+            targetText = doc;
+            vscode.workspace.onDidChangeTextDocument(() => {
+                doPost(context);
+            });
+            doPost(context);
         })
     );
     // Our new command
     context.subscriptions.push(
         vscode.commands.registerCommand('catCoding.doRefactor', () => {
-            if (!currentPanel) {
-                return;
-            }
-            const data=loadData(context);
-            const draw=drawData(context,data);
-
-            // Send a message to our webview.
-            // You can send any JSON serializable data.
-            currentPanel.webview.postMessage(draw);
+            doPost(context);
         })
     );
 }
-function loadData(context:vscode.ExtensionContext){
+
+function doPost(context: vscode.ExtensionContext) {
+    if (!currentPanel || !targetText) {
+        return;
+    }
+    const editer = vscode.window.activeTextEditor;
+    if (!editer) { return; }
+    const document = editer.document;
+    if (document !== targetText) { return; }
+    const data = loadData(context, document);
+    const draw = drawData(context, data);
+
+    // Send a message to our webview.
+    // You can send any JSON serializable data.
+    currentPanel!.webview.postMessage(draw);
+
+}
+function loadData(context: vscode.ExtensionContext, doc: vscode.TextDocument) {
+
+    let content = doc.getText();
+    let data = jsyaml.safeLoad(content);
+    console.log(data);
+    return data;
     return {
-        components:[
-            {tag:"img",pos:{x:10,y:10},src:"resource/B1.png"},
+        components: [
+            { tag: ["img"], pos: { x: 0, y: 0 }, src: "resource/haikei2.png" },
+            { tag: ["img"], pos: { x: 10, y: 0 }, src: "resource/B1.png" },
+            { tag: ["img"], pos: { x: 550, y: 0 }, src: "resource/B3.png" },
         ]
     };
 }
-function drawData(context:vscode.ExtensionContext,data:any){
-    let c:any[]=data.components;
-    for (let i of data.components){
-        i.url=getUrlOfLocal(context,i.src).toString();
+function drawData(context: vscode.ExtensionContext, data: any) {
+    let c: any[] = data.components;
+    for (let i of data.components) {
+        i.url = getUrlOfLocal(context, i.src).toString();
     }
     return data;
 }

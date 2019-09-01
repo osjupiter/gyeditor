@@ -1,0 +1,8 @@
+components:
+    - tag: [img]
+      pos: {x: 0, y: 0}
+      src: resource/B1.png
+    - tag: [img]
+      pos: {x: 0, y: 0}
+      src: resource/haikei2.png
+
