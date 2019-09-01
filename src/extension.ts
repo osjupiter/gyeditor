@@ -1,27 +1,86 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const htmlFile = "src/panel.html";
+let currentPanel: vscode.WebviewPanel | undefined = undefined;
 export function activate(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+        vscode.commands.registerCommand('extension.helloWorld', () => {
+            // Create and show a new webview
+            const panel = createPanel();
+            currentPanel = panel;
+            const p = getPath(context, htmlFile);
+            const c = getWebviewContent(p);
+            const reped = replaceVars(c, context);
+            // And set its HTML content
+            panel.webview.html = reped;
+        })
+    );
+    // Our new command
+    context.subscriptions.push(
+        vscode.commands.registerCommand('catCoding.doRefactor', () => {
+            if (!currentPanel) {
+                return;
+            }
+            const data=loadData(context);
+            const draw=drawData(context,data);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "gyedit" is now active!');
+            // Send a message to our webview.
+            // You can send any JSON serializable data.
+            currentPanel.webview.postMessage(draw);
+        })
+    );
+}
+function loadData(context:vscode.ExtensionContext){
+    return {
+        components:[
+            {tag:"img",pos:{x:10,y:10},src:"resource/B1.png"},
+        ]
+    };
+}
+function drawData(context:vscode.ExtensionContext,data:any){
+    let c:any[]=data.components;
+    for (let i of data.components){
+        i.url=getUrlOfLocal(context,i.src).toString();
+    }
+    return data;
+}
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
+function getUrlOfLocal(context: vscode.ExtensionContext, file: string) {
+    const url = vscode.Uri.file(path.join(context.extensionPath, file)).with({ scheme: 'vscode-resource' });
+    return url;
+}
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World!');
-	});
+function replaceVars(str: string, context: vscode.ExtensionContext) {
+    const url = getUrlOfLocal(context, "src/fabric.min.js");
+    const replaced = str.replace(/P5JSSRC/g, url.toString());
+    return replaced;
+}
 
-	context.subscriptions.push(disposable);
+function createPanel() {
+    return vscode.window.createWebviewPanel(
+        'catCoding',
+        'Cat Coding',
+        vscode.ViewColumn.Beside,
+        {
+            enableScripts: true
+        }
+    );
+
+}
+
+function getPath(context: vscode.ExtensionContext, file: string) {
+    const pathToHtml = vscode.Uri.file(path.join(context.extensionPath, file));
+    const pathUri = pathToHtml.with({ scheme: 'vscode-resource' });
+    return pathUri;
+}
+
+function getWebviewContent(p: vscode.Uri) {
+    return fs.readFileSync(p.fsPath, 'utf8');
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

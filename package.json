@@ -18,6 +18,10 @@
 			{
 				"command": "extension.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "catCoding.doRefactor",
+				"title": "HelloClear"
 			}
 		]
 	},
