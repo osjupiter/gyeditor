@@ -1,8 +1,9 @@
 components:
     - tag: [img]
       pos: {x: 0, y: 0}
-      src: resource/B1.png
+      src: testdata/haikei2.png
     - tag: [img]
       pos: {x: 0, y: 0}
-      src: resource/haikei2.png
+      src: testdata/B1.png
+
 

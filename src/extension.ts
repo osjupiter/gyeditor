@@ -5,17 +5,22 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as jsyaml from 'js-yaml';
 
-const htmlFile = "src/panel.html";
+const htmlFile = "resource/panel.html";
 let currentPanel: vscode.WebviewPanel | undefined = undefined;
 let targetText: vscode.TextDocument | undefined = undefined;
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('extension.helloWorld', () => {
-            const doc = vscode.window.activeTextEditor!.document;
+            const editor = vscode.window.activeTextEditor;
+            if (editor === null) {
+                vscode.window.showInformationMessage('対象のエディタがありません');
+            }
+            const doc = editor!.document;
             if (doc.languageId !== "yaml") {
                 vscode.window.showInformationMessage('ファイルがyamlではありません');
                 return;
             }
+
 
             // Create and show a new webview
             const panel = createPanel();
@@ -51,6 +56,7 @@ function doPost(context: vscode.ExtensionContext) {
     if (document !== targetText) { return; }
     const data = loadData(context, document);
     const draw = drawData(context, data);
+    console.log(draw);
 
     // Send a message to our webview.
     // You can send any JSON serializable data.
@@ -61,7 +67,6 @@ function loadData(context: vscode.ExtensionContext, doc: vscode.TextDocument) {
 
     let content = doc.getText();
     let data = jsyaml.safeLoad(content);
-    console.log(data);
     return data;
     return {
         components: [
@@ -80,12 +85,16 @@ function drawData(context: vscode.ExtensionContext, data: any) {
 }
 
 function getUrlOfLocal(context: vscode.ExtensionContext, file: string) {
-    const url = vscode.Uri.file(path.join(context.extensionPath, file)).with({ scheme: 'vscode-resource' });
+    let basepath = context.extensionPath;
+    if (vscode.workspace.workspaceFolders!==undefined &&vscode.workspace.workspaceFolders[0].name !== undefined) {
+        basepath = vscode.workspace.workspaceFolders[0].uri.path;
+    }
+    const url = vscode.Uri.file(path.join(basepath, file)).with({ scheme: 'vscode-resource' });
     return url;
 }
 
 function replaceVars(str: string, context: vscode.ExtensionContext) {
-    const url = getUrlOfLocal(context, "src/fabric.min.js");
+    const url = getPath(context, "resource/fabric.min.js");
     const replaced = str.replace(/P5JSSRC/g, url.toString());
     return replaced;
 }
