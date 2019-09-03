@@ -12,6 +12,7 @@
     <canvas id="c" width="800" height="600" style="background-color: white;"></canvas>
 
     <script>
+        fabric.Object.prototype.objectCaching = false;
         var canvas = new fabric.StaticCanvas('c');
         // Handle the message inside the webview
         window.addEventListener('message', event => {
@@ -21,7 +22,7 @@
             for(let i in message.components){
                 const d=message.components[i]
                 if(!d.tag.includes("img")){continue}
-                fabric.Image.fromURL(d.url,function(c){
+                fabric.Image.fromURL(d.url+"?"+ (Date.now()),function(c){
                     canvas.add(c)
                 },{"left":d.pos.x,"top":d.pos.y})
             }

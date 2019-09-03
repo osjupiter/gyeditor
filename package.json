@@ -2,7 +2,7 @@
 	"name": "gyedit",
 	"displayName": "gyedit",
 	"description": "",
-	"version": "0.0.1",
+	"version": "0.1.2",
 	"engines": {
 		"vscode": "^1.37.0"
 	},
