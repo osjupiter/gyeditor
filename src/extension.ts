@@ -55,7 +55,7 @@ function doPost(context: vscode.ExtensionContext) {
     const document = editer.document;
     if (document !== targetText) { return; }
     const data = loadData(context, document);
-    const draw = drawData(context, data);
+    const draw = filterData(context, data);
     console.log(draw);
 
     // Send a message to our webview.
@@ -76,10 +76,11 @@ function loadData(context: vscode.ExtensionContext, doc: vscode.TextDocument) {
         ]
     };
 }
-function drawData(context: vscode.ExtensionContext, data: any) {
+function filterData(context: vscode.ExtensionContext, data: any) {
     let c: any[] = data.components;
-    for (let i of data.components) {
-        i.url = getUrlOfLocal(context, i.src).toString();
+    for (let [i,v] of c.entries()) {
+        v.url = getUrlOfLocal(context, v.src).toString();
+        v.order=i;
     }
     return data;
 }

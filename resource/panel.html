@@ -14,9 +14,19 @@
     <script>
         fabric.Object.prototype.objectCaching = false;
         var canvas = new fabric.StaticCanvas('c');
+        let list=[]
+
+        const sort= ()=>{
+            const sorted=list.sort((a,b)=>a.order-b.order)
+            console.log(sorted)
+            sorted.forEach(e=>{
+                canvas.moveTo(e.obj,10000-e.order)
+            })
+        }
         // Handle the message inside the webview
         window.addEventListener('message', event => {
             canvas.clear()
+            list=[]
             const message = event.data; // The JSON data our extension sent
             if(!message.components)return
             for(let i in message.components){
@@ -24,6 +34,8 @@
                 if(!d.tag.includes("img")){continue}
                 fabric.Image.fromURL(d.url+"?"+ (Date.now()),function(c){
                     canvas.add(c)
+                    list.push({order:d.order,obj:c});
+                    sort()
                 },{"left":d.pos.x,"top":d.pos.y})
             }
         });
